@@ -1,0 +1,80 @@
+version: '2'
+
+services:
+  spark-master:
+    user: root
+    hostname: spark-master
+    working_dir: /opt/spark
+    build: .
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    volumes:
+      - datalake:/opt/datalake
+      - warehouse:/opt/warehouse
+    ports:
+      - '7077:7077'
+      - '8080:8080'
+    command: ./sbin/start-master.sh
+  spark-worker:
+    user: root
+    working_dir: /opt/spark
+    build: .
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+    volumes:
+      - datalake:/opt/datalake
+      - warehouse:/opt/warehouse
+    command: ./sbin/start-worker.sh spark://spark-master:7077
+  jupyter:
+    user: root
+    working_dir: /opt/spark
+    build: 
+      context: ./jupyter
+    volumes:
+      - ./sparkcode:/opt/spark/sparkcode
+      - datalake:/opt/datalake
+      - warehouse:/opt/warehouse
+    environment:
+      - PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip
+    ports:
+      - '8888:8888'
+    command: jupyter lab --allow-root --NotebookApp.token=secret123 --ip 0.0.0.0 --no-browser
+  extractor:
+    build:
+      context: ./extractor
+    volumes:
+      - datalake:/opt/datalake
+      - warehouse:/opt/warehouse
+  tfidf_calculator:
+    build:
+      context: ./sparkcode
+    working_dir: /opt/app
+    volumes:
+      - datalake:/opt/datalake
+      - warehouse:/opt/warehouse
+  rest:
+    user: root
+    build:
+      context: ./rest
+    environment:
+      - PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip:/opt/app/
+    volumes:
+      - warehouse:/opt/warehouse
+      - ./rest:/opt/app   ## uncomment for rapid development.
+    ports:
+      - '8000:8000'
+
+
+volumes:
+  datalake:
+  warehouse:
+
+
+# Test with:
+# docker-compose build
+# docker-compose up
+# docker-compose down
+# docker-compose exec extractor bash
+# docker-compose up -d
+# docker-compose up --scale spark-worker=3
+# docker cp 065ade4fa188:/opt/warehouse ./test-warehouse/
