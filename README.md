@@ -10,8 +10,6 @@ Everything will be running in docker containers on local machine, then deployed 
 
 Run `docker-compose up` to bring up entire system and see the Mastodon extractors start running, use the REST API to calculate a TF-IDF matrix, and POST a set of keywords and get a list of recommended Mastodon users.
 
-You will also hand in a short written section, described below.
-
 ## Toot Extractor
 Create a new docker-compose service called `extractor`. This will run a program that fetches the timeline from one or more Mastodon servers and adds it to "data-lake."
 
@@ -27,7 +25,7 @@ PySpark application that reads the contents of data-lake, and computes the TF-ID
 ### Component Requirements
 
 * Program to generate a matrix where each row represents the a Mastodon-user and each column represents a word from our vocabulary.
-* You will implement a docker-service that uses pyspark to recompute the TF-IDF every 5 minutes.
+* A docker-service is implementted that uses pyspark to recompute the TF-IDF every 5 minutes.
 
 ## REST API
 Exposes this system to analyze relationships between Mastodon users.
@@ -50,10 +48,6 @@ The RESTful resources include:
     ```
 * `/api/v1/tf-idf/user-ids/<user_id>` -- This should return the TF-IDF matrix row for the given mastodon user as a dictionary with keys = vocabulary words, and values = TF-IDF values.
 * `/api/v1/tf-idf/user-ids/<user_id>/neighbors` -- This should return the 10 nearest neighbors, as measured by the cosine-distance between the users's TF-IDF matrix rows.
-
-### Additional Hints
-
-* You are provided with a `rest` service as a starting-point that demonstrates how to make Spark calls from a FastAPI service. Feel free to use this as a starting-point. If you have a different REST framework that you prefer, feel free to use that instead.
 
 ## Scaling up
 In your local environment, you can increase the number of worker containers by running:
